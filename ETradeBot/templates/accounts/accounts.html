@@ -1,0 +1,13 @@
+{% extends "base.html" %} {% block content %}
+    <div class="card-header">
+    <h1>Accounts</h1>
+    </div>
+    <form action="/accounts_data" method="post">
+        <div class=""form-group">
+            <label for="submit">Gather Accounts:</label><br />
+            <input type="submit" value="Load Accounts" class="btn btn-primary mt-2"/>
+        </div>
+    </form>
+    <turbo-frame id="accounts_data">
+    </turbo-frame>
+{% endblock %}

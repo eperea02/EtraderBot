@@ -1,0 +1,20 @@
+{% extends "base.html" %} {% block content %}
+<div class="card-header">
+  <h1>Quotes:</h1>
+</div>
+<form action="/market_data" method="post">
+  <label for="symbols">Stock Symbols:</label><br />
+  <input type="text" id="symbols" name="symbols" /><br />
+  <input type="submit" value="Load Symbols" style="margin: 4px 2px" />
+</form>
+<turbo-frame id="quote_data">
+  <div class="container mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h1>Quotes</h1>
+      </div>
+      <div class="card-body">None Gathered</div>
+    </div>
+  </div>
+</turbo-frame>
+{% endblock %}

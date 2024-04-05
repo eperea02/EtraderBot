@@ -1,0 +1,34 @@
+<turbo-frame id="accounts_data">
+  <div class="container mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h1>Accounts</h1>
+      </div>
+      <div class="card-body">
+        <pre
+          class="card-text"
+        ><code>{{ accounts_data | tojson(indent=2) }}</code></pre>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h1>Balance</h1>
+      </div>
+      <div class="card-body">
+        <pre
+          class="card-text"
+        ><code>{{ balance | tojson(indent=2) }}</code></pre>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h1>Portfolio</h1>
+      </div>
+      <div class="card-body">
+        <pre
+          class="card-text"
+        ><code>{{ portfolio | tojson(indent=2) }}</code></pre>
+      </div>
+    </div>
+  </div>
+</turbo-frame>
