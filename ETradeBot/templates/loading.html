@@ -6,24 +6,18 @@
   document.addEventListener("turbo:before-fetch-request", function (event) {
     // This code will run when a Turbo Frame starts fetching content
     document.getElementById("progress").style.display = "block";
-    console.log("Turbo Frame fetch request started");
-    console.log(event);
     window.totalRequests += 1;
     window.requestCount += 1;
   });
 
   document.addEventListener("turbo:before-fetch-response", function (event) {
     // This code will run when a Turbo Frame finishes fetching content
-    console.log("Turbo Frame fetch request ended");
     window.completedRequests += 1;
     let percentage = (window.completedRequests / window.totalRequests) * 100;
-    console.log("Completed requests: " + window.completedRequests);
-    console.log("Total requests: " + window.totalRequests);
     document.getElementById("progress-bar").ariaValueNow = percentage;
     document.getElementById("progress-bar").style =
       "width: " + percentage + "%";
     if (window.completedRequests == window.totalRequests) {
-      console.log("All requests completed");
       setTimeout(() => {}, 1000);
       document.getElementById("progress").style.display = "none";
     }

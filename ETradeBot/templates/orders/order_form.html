@@ -1,0 +1,90 @@
+<tubo-frame id="order_form">
+  <div class="container mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h1>Order Preview</h1>
+      </div>
+      <div class="card-body">
+        <form action="/preview_order" method="post" class="form-group">
+          <div class="form-group">
+            <label for="client_order_id">Order Id:</label>
+            <select
+              id="client_order_id"
+              name="client_order_id"
+              class="form-control"
+              disabled
+            >
+              <option value="client_order_id">{{client_order_id}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="accountId">Account Id:</label>
+            <select
+              id="accountId"
+              name="accountId"
+              class="form-control"
+              disabled
+            >
+              <option value="accountId">{{accountId}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="price_type">Price Type:</label>
+            <select id="price_type" name="price_type" class="form-control">
+              <option value="MARKET">Market</option>
+              <option value="LIMIT">Limit</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="order_term">Order Term:</label>
+            <select id="order_term" name="order_term" class="form-control">
+              <option value="GOOD_FOR_DAY">Good for Day</option>
+              <option value="IMMEDIATE_OR_CANCEL">Immediate or Cancel</option>
+              <option value="FILL_OR_KILL">Fill or Kill</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="limit_price">Limit Price:</label>
+            <input
+              type="text"
+              id="limit_price"
+              name="limit_price"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="symbol">Stock Symbol:</label>
+            <input type="text" id="symbol" name="symbol" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="order_action">Order Action Type:</label>
+            <select id="order_action" name="order_action" class="form-control">
+              <option value="BUY">Buy</option>
+              <option value="SELL">Sell</option>
+              <option value="BUY_TO_COVER">Buy to Cover</option>
+              <option value="SELL_SHORT">Sell Short</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input
+              type="text"
+              id="quantity"
+              name="quantity"
+              class="form-control"
+            />
+          </div>
+
+          <input type="submit" value="Preview Order" class="btn btn-primary" />
+        </form>
+      </div>
+    </div>
+  </div>
+</tubo-frame>
+
+<turbo-frame id="order_result"></turbo-frame>

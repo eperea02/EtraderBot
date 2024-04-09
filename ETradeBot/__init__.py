@@ -2,32 +2,47 @@ import os
 import pdb
 
 import flask
-from flask import request
+from dotenv import load_dotenv
+from flask import g, request
 from flask import session as flask_session
 from rauth import OAuth1Service, OAuth1Session
 from turbo_flask import Turbo
 
+from ETradeBot.routes.back_testing import back_testing as back_testing_blueprint
+from ETradeBot.routes.place_order import place_order as place_order_blueprint
 from ETradeBot.utils.accounts import Accounts
-from ETradeBot.utils.consts import revoke_token_url
+from ETradeBot.utils.consts import (
+    access_token_url,
+    base_url,
+    consumer_key,
+    consumer_secret,
+    request_token_url,
+    revoke_token_url,
+)
 from ETradeBot.utils.market import Market
 from ETradeBot.utils.oauth import create_oauth_session
 from ETradeBot.utils.order import Order
+
+load_dotenv()
 
 
 def create_app():  # noqa C901
 
     etrade = OAuth1Service(
         name="etrade",
-        consumer_key=os.environ.get("PROD_CONSUMER_KEY"),
-        consumer_secret=os.environ.get("PROD_CONSUMER_SECRET"),
-        request_token_url="https://api.etrade.com/oauth/request_token",
-        access_token_url="https://api.etrade.com/oauth/access_token",
+        consumer_key=consumer_key,
+        consumer_secret=consumer_secret,
+        request_token_url=request_token_url,
+        access_token_url=access_token_url,
         authorize_url="https://us.etrade.com/e/t/etws/authorize?key={}&token={}",
-        base_url="https://api.etrade.com/v1/",
+        base_url=base_url,
     )
     app = flask.Flask(__name__)
     app.secret_key = os.environ.get("PROD_CONSUMER_KEY")
     turbo = Turbo(app)
+    app.turbo = turbo
+    app.register_blueprint(place_order_blueprint)
+    app.register_blueprint(back_testing_blueprint)
 
     request_token, request_token_secret = etrade.get_request_token(
         params={"oauth_callback": "oob", "format": "json"}
@@ -61,7 +76,7 @@ def create_app():  # noqa C901
 
     @app.route("/logout")
     def logout():
-        oauth_session = flask.g.get("oauth_session")
+        oauth_session = g.get("oauth_session")
         oauth_session.get(revoke_token_url)
         flask_session.clear()
         return flask.redirect(flask.url_for("index"))
@@ -69,9 +84,7 @@ def create_app():  # noqa C901
     @app.route("/market_data", methods=["POST"])
     def market_data():
         symbols = request.form.get("symbols")  # if data is sent as form data
-        oauth_session = flask.g.get("oauth_session")
-
-        base_url = os.environ.get("PROD_BASE_URL")
+        oauth_session = g.get("oauth_session")
         market = Market(oauth_session, base_url)
         quote_data = market.quotes(symbols=symbols, format="json")
 
@@ -110,12 +123,54 @@ def create_app():  # noqa C901
 
     @app.route("/accounts")
     def accounts():
-        return flask.render_template("accounts/accounts.html")
+        oauth_session = g.get("oauth_session")
+        account = Accounts(oauth_session, base_url)
+        accounts_json = account.account_list(format="json")
+        accounts_data = accounts_json["AccountListResponse"]["Accounts"]["Account"]
+        return flask.render_template(
+            "accounts/accounts.html", accounts_data=accounts_data
+        )
+
+    @app.route("/session_account_selected", methods=["POST"])
+    def session_account_selected():
+        accountId = request.form.get("accountId")
+        flask_session["accountId"] = accountId
+        oauth_session = g.get("oauth_session")
+        account = Accounts(oauth_session, base_url)
+        accounts_json = account.account_list(format="json")
+        accounts_data = accounts_json["AccountListResponse"]["Accounts"]["Account"]
+
+        for acc in accounts_data:
+            if acc["accountId"] == accountId:
+                account.account = acc
+                break
+
+        balance = account.balance(format="json")
+        accdata = [
+            f"Account ID: {account.account['accountId']}",
+            f"Account Name: {account.account['accountName']}",
+            f"Account Description: {account.account['accountDesc']}",
+            f"Account Type: {account.account['accountType']}",
+            f"Balance: { balance['BalanceResponse']['Cash']['moneyMktBalance'] }",
+        ]
+
+        account_html = flask.render_template(
+            "orders/data_card.html",
+            title="Account Info:",
+            data=accdata,
+            tag="session_account_selected",
+        )
+
+        if turbo.can_stream():
+            return turbo.stream(
+                turbo.update(account_html, target="session_account_selected")
+            )
+
+        return account_html
 
     @app.route("/accounts_data", methods=["POST"])
     def accounts_data():
-        oauth_session = flask.g.get("oauth_session")
-        base_url = os.environ.get("PROD_BASE_URL")
+        oauth_session = g.get("oauth_session")
         account = Accounts(oauth_session, base_url)
         accounts_data = account.account_list(format="json")
 

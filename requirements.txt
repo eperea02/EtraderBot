@@ -19,4 +19,5 @@ requests==2.31.0
 simple-websocket==1.0.0
 urllib3==2.2.1
 wsproto==1.2.0
+yfinance==0.2.37
 zipp==3.18.1

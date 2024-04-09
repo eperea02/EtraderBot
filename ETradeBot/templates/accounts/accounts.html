@@ -1,13 +1,20 @@
 {% extends "base.html" %} {% block content %}
-    <div class="card-header">
-    <h1>Accounts</h1>
-    </div>
-    <form action="/accounts_data" method="post">
-        <div class=""form-group">
-            <label for="submit">Gather Accounts:</label><br />
-            <input type="submit" value="Load Accounts" class="btn btn-primary mt-2"/>
-        </div>
+<turbo-frame id="account_data">
+  <div class="container mt-4">
+    <form method="POST" action="/session_account_selected">
+      <div class="form-group">
+        <label for="accountSelect">Select Account</label>
+        <select class="form-control" id="accountSelect" name="accountId">
+          {% for account in accounts_data %}
+          <option value="{{ account.accountId }}">
+            {{ account.accountDesc }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
     </form>
-    <turbo-frame id="accounts_data">
-    </turbo-frame>
+  </div>
+</turbo-frame>
+<turbo-frame id="session_account_selected"> </turbo-frame>
 {% endblock %}

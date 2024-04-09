@@ -1,0 +1,11 @@
+{% extends "base.html" %} {% block content %}
+<script
+  type="module"
+  src="{{ url_for('static', filename='hello_controller.js') }}"
+></script>
+<div data-controller="hello">
+  <input data-hello-target="name" type="text" />
+  <button data-action="click->hello#greet">Greet</button>
+  <span data-hello-target="output"> </span>
+</div>
+{% endblock %}

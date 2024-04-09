@@ -28,16 +28,16 @@ class Order:
         self.account = account
         self.base_url = base_url
 
-    def preview_order(self):
+    def preview_order(self, order=None):
+
         """
         Call preview order API based on selecting from different given options
 
         :param self: Pass in authenticated session and information on selected account
         """
-
-
         # User's order selection
-        order = self.user_select_order()
+        if order is None:
+            order = self.user_select_order()
 
         # URL for the API endpoint
         url = self.base_url + "/v1/accounts/" + self.account["accountIdKey"] + "/orders/preview.json"
@@ -67,6 +67,7 @@ class Order:
                            </Instrument>
                        </Order>
                    </PreviewOrderRequest>"""
+
         payload = payload.format(order["client_order_id"], order["price_type"], order["order_term"],
                                  order["limit_price"], order["symbol"], order["order_action"], order["quantity"])
 
@@ -75,66 +76,14 @@ class Order:
         logger.debug("Request Header: %s", response.request.headers)
         logger.debug("Request payload: %s", payload)
 
-        # Handle and parse response
-        if response is not None and response.status_code == 200:
-            parsed = json.loads(response.text)
-            logger.debug("Response Body: %s", json.dumps(parsed, indent=4, sort_keys=True))
-            data = response.json()
-            print("\nPreview Order:")
+        return response
 
-            if data is not None and "PreviewOrderResponse" in data and "PreviewIds" in data["PreviewOrderResponse"]:
-                for previewids in data["PreviewOrderResponse"]["PreviewIds"]:
-                    print("Preview ID: " + str(previewids["previewId"]))
-            else:
-                # Handle errors
-                data = response.json()
-                if 'Error' in data and 'message' in data["Error"] and data["Error"]["message"] is not None:
-                    print("Error: " + data["Error"]["message"])
-                else:
-                    print("Error: Preview Order API service error")
-
-            if data is not None and "PreviewOrderResponse" in data and "Order" in data["PreviewOrderResponse"]:
-                for orders in data["PreviewOrderResponse"]["Order"]:
-                    order["limitPrice"] = orders["limitPrice"]
-
-                    if orders is not None and "Instrument" in orders:
-                        for instrument in orders["Instrument"]:
-                            if instrument is not None and "orderAction" in instrument:
-                                print("Action: " + instrument["orderAction"])
-                            if instrument is not None and "quantity" in instrument:
-                                print("Quantity: " + str(instrument["quantity"]))
-                            if instrument is not None and "Product" in instrument \
-                                    and "symbol" in instrument["Product"]:
-                                print("Symbol: " + instrument["Product"]["symbol"])
-                            if instrument is not None and "symbolDescription" in instrument:
-                                print("Description: " + str(instrument["symbolDescription"]))
-
-                if orders is not None and "priceType" in orders and "limitPrice" in orders:
-                    print("Price Type: " + orders["priceType"])
-                    if orders["priceType"] == "MARKET":
-                        print("Price: MKT")
-                    else:
-                        print("Price: " + str(orders["limitPrice"]))
-                if orders is not None and "orderTerm" in orders:
-                    print("Duration: " + orders["orderTerm"])
-                if orders is not None and "estimatedCommission" in orders:
-                    print("Estimated Commission: " + str(orders["estimatedCommission"]))
-                if orders is not None and "estimatedTotalAmount" in orders:
-                    print("Estimated Total Cost: " + str(orders["estimatedTotalAmount"]))
-            else:
-                # Handle errors
-                data = response.json()
-                if 'Error' in data and 'message' in data["Error"] and data["Error"]["message"] is not None:
-                    print("Error: " + data["Error"]["message"])
-                else:
-                    print("Error: Preview Order API service error")
-        else:
-            # Handle errors
-            data = response.json()
-            if 'Error' in data and 'message' in data["Error"] and data["Error"]["message"] is not None:
-                print("Error: " + data["Error"]["message"])
-            else:
-                print("Error: Preview Order API service error")
+        # # Handle and parse response
+        # if response is not None and response.status_code == 200:
+        #     parsed = json.loads(response.text)
+        #     logger.debug("Response Body: %s", json.dumps(parsed, indent=4, sort_keys=True))
+        #     data = response.json()
+        #     return data
 
     def previous_order(self, session, account, prev_orders):
         """
@@ -652,144 +601,24 @@ class Order:
 
         :param self: Pass in authenticated session and information on selected account
         """
-        while True:
-            # URL for the API endpoint
-            url = self.base_url + "/v1/accounts/" + self.account["accountIdKey"] + "/orders.json"
+        url = self.base_url + "/v1/accounts/" + self.account["accountIdKey"] + "/orders.json"
 
-            # Add parameters and header information
-            headers = {"consumerkey": consumer_key}
-            params_open = {"status": "OPEN"}
-            params_executed = {"status": "EXECUTED"}
-            params_indiv_fills = {"status": "INDIVIDUAL_FILLS"}
-            params_cancelled = {"status": "CANCELLED"}
-            params_rejected = {"status": "REJECTED"}
-            params_expired = {"status": "EXPIRED"}
+        # Add parameters and header information
+        headers = {"consumerkey": consumer_key}
+        params_open = {"status": "OPEN"}
+        params_executed = {"status": "EXECUTED"}
+        params_indiv_fills = {"status": "INDIVIDUAL_FILLS"}
+        params_cancelled = {"status": "CANCELLED"}
+        params_rejected = {"status": "REJECTED"}
+        params_expired = {"status": "EXPIRED"}
 
-            # Make API call for GET request
-            response_open = self.session.get(url, header_auth=True, params=params_open, headers=headers)
-            response_executed = self.session.get(url, header_auth=True, params=params_executed, headers=headers)
-            response_indiv_fills = self.session.get(url, header_auth=True, params=params_indiv_fills, headers=headers)
-            response_cancelled = self.session.get(url, header_auth=True, params=params_cancelled, headers=headers)
-            response_rejected = self.session.get(url, header_auth=True, params=params_rejected, headers=headers)
-            response_expired = self.session.get(url, header_auth=True, params=params_expired, headers=headers)
-
-            prev_orders = []
-
-            # Open orders
-            logger.debug("Request Header: %s", response_open.request.headers)
-            logger.debug("Response Body: %s", response_open.text)
-
-            print("\nOpen Orders:")
-            # Handle and parse response
-            if response_open.status_code == 204:
-                logger.debug(response_open)
-                print("None")
-            elif response_open.status_code == 200:
-                parsed = json.loads(response_open.text)
-                logger.debug(json.dumps(parsed, indent=4, sort_keys=True))
-                data = response_open.json()
-
-                # Display list of open orders
-                prev_orders.extend(self.print_orders(data, "open"))
-
-            # Executed orders
-            logger.debug("Request Header: %s", response_executed.request.headers)
-            logger.debug("Response Body: %s", response_executed.text)
-            logger.debug(response_executed.text)
-
-            print("\nExecuted Orders:")
-            # Handle and parse response
-            if response_executed.status_code == 204:
-                logger.debug(response_executed)
-                print("None")
-            elif response_executed.status_code == 200:
-                parsed = json.loads(response_executed.text)
-                logger.debug(json.dumps(parsed, indent=4, sort_keys=True))
-                data = response_executed.json()
-
-                # Display list of executed orders
-                prev_orders.extend(self.print_orders(data, "executed"))
-
-            # Individual fills orders
-            logger.debug("Request Header: %s", response_indiv_fills.request.headers)
-            logger.debug("Response Body: %s", response_indiv_fills.text)
-
-            print("\nIndividual Fills Orders:")
-            # Handle and parse response
-            if response_indiv_fills.status_code == 204:
-                logger.debug("Response Body: %s", response_indiv_fills)
-                print("None")
-            elif response_indiv_fills.status_code == 200:
-                parsed = json.loads(response_indiv_fills.text)
-                logger.debug("Response Body: %s", json.dumps(parsed, indent=4, sort_keys=True))
-                data = response_indiv_fills.json()
-
-                # Display list of individual fills orders
-                prev_orders.extend(self.print_orders(data, "indiv_fills"))
-
-            # Cancelled orders
-            logger.debug("Request Header: %s", response_cancelled.request.headers)
-            logger.debug("Response Body: %s", response_cancelled.text)
-
-            print("\nCancelled Orders:")
-            # Handle and parse response
-            if response_cancelled.status_code == 204:
-                logger.debug(response_cancelled)
-                print("None")
-            elif response_cancelled.status_code == 200:
-                parsed = json.loads(response_cancelled.text)
-                logger.debug(json.dumps(parsed, indent=4, sort_keys=True))
-                data = response_cancelled.json()
-
-                # Display list of open orders
-                prev_orders.extend(self.print_orders(data, "cancelled"))
-
-            # Rejected orders
-            logger.debug("Request Header: %s", response_rejected.request.headers)
-            logger.debug("Response Body: %s", response_rejected.text)
-
-            print("\nRejected Orders:")
-            # Handle and parse response
-            if response_rejected.status_code == 204:
-                logger.debug(response_rejected)
-                print("None")
-            elif response_rejected.status_code == 200:
-                parsed = json.loads(response_rejected.text)
-                logger.debug(json.dumps(parsed, indent=4, sort_keys=True))
-                data = response_rejected.json()
-
-                # Display list of open orders
-                prev_orders.extend(self.print_orders(data, "rejected"))
-
-            # Expired orders
-            print("\nExpired Orders:")
-            # Handle and parse response
-            if response_expired.status_code == 204:
-                logger.debug(response_executed)
-                print("None")
-            elif response_expired.status_code == 200:
-                parsed = json.loads(response_expired.text)
-                logger.debug(json.dumps(parsed, indent=4, sort_keys=True))
-                data = response_expired.json()
-
-                # Display list of open orders
-                prev_orders.extend(self.print_orders(data, "expired"))
-
-            menu_list = {"1": "Preview Order",
-                         "2": "Cancel Order",
-                         "3": "Go Back"}
-
-            print("")
-            options = menu_list.keys()
-            for entry in options:
-                print(entry + ")\t" + menu_list[entry])
-
-            selection = input("Please select an option: ")
-            if selection == "1":
-                self.preview_order_menu(self.session, self.account, prev_orders)
-            elif selection == "2":
-                self.cancel_order()
-            elif selection == "3":
-                break
-            else:
-                print("Unknown Option Selected!")
+        # Make API call for GET request
+        responses = {
+            "open": self.session.get(url, header_auth=True, params=params_open, headers=headers),
+            "executed": self.session.get(url, header_auth=True, params=params_executed, headers=headers),
+            "indiv_fills": self.session.get(url, header_auth=True, params=params_indiv_fills, headers=headers),
+            "cancelled": self.session.get(url, header_auth=True, params=params_cancelled, headers=headers),
+            "rejected": self.session.get(url, header_auth=True, params=params_rejected, headers=headers),
+            "expired": self.session.get(url, header_auth=True, params=params_expired, headers=headers),
+        }
+        return responses

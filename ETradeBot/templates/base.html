@@ -6,6 +6,12 @@
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
     />
+    <script type="module">
+      import { Application, Controller } from "https://cdn.skypack.dev/stimulus";
+      import { HelloController } from "/static/hello_controller.js"
+      const application = Application.start();
+      application.register("hello", HelloController);
+    </script>
     {{ turbo() }}
   </head>
   <body>

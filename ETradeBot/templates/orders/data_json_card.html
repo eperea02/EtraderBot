@@ -1,0 +1,12 @@
+<turbo-frame id="{{ tag }}">
+  <div class="container mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h1>{{ title }}</h1>
+      </div>
+      <div class="card-body">
+        <pre class="card-text"><code>{{ data | tojson(indent=2) }}</code></pre>
+      </div>
+    </div>
+  </div>
+</turbo-frame>
