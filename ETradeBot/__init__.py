@@ -8,17 +8,13 @@ from flask import session as flask_session
 from rauth import OAuth1Service, OAuth1Session
 from turbo_flask import Turbo
 
-from ETradeBot.routes.back_testing import back_testing as back_testing_blueprint
+from ETradeBot.routes.back_testing import \
+    back_testing as back_testing_blueprint
 from ETradeBot.routes.place_order import place_order as place_order_blueprint
 from ETradeBot.utils.accounts import Accounts
-from ETradeBot.utils.consts import (
-    access_token_url,
-    base_url,
-    consumer_key,
-    consumer_secret,
-    request_token_url,
-    revoke_token_url,
-)
+from ETradeBot.utils.consts import (access_token_url, base_url, consumer_key,
+                                    consumer_secret, request_token_url,
+                                    revoke_token_url)
 from ETradeBot.utils.market import Market
 from ETradeBot.utils.oauth import create_oauth_session
 from ETradeBot.utils.order import Order
@@ -58,7 +54,7 @@ def create_app():  # noqa C901
 
     @app.before_request
     def before_request():
-        if flask.request.endpoint in ["index", "authorize", "session"]:
+        if flask.request.endpoint in ["index", "authorize", "session", "callback"]:
             return
 
         oauth_session = create_oauth_session()
@@ -100,9 +96,9 @@ def create_app():  # noqa C901
     def market():
         return flask.render_template("market.html")
 
-    @app.route("/session", methods=["POST"])
-    def session():
-        text_code = request.form.get("text_code")  # if data is sent as form data
+    @app.route("/callback", methods=["GET"])
+    def callback():
+        text_code = request.args.get("oauth_verifier")
         oauth_session = etrade.get_auth_session(
             request_token,
             request_token_secret,
@@ -110,7 +106,7 @@ def create_app():  # noqa C901
         )
         flask_session["access_token"] = oauth_session.access_token
         flask_session["access_token_secret"] = oauth_session.access_token_secret
-        html = flask.render_template("session/success.html")
+        html = flask.render_template("session/home_page_with_session.html")
 
         if turbo.can_stream():
             return turbo.stream(turbo.update(html, target="appbody"))
